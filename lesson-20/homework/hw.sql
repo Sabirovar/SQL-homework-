@@ -453,4 +453,516 @@ FROM
     Age,
     NTILE(3) OVER (ORDER BY Age) AS AgeGroup
 FROM
-    Employees1;
+    Employees1
+
+--Medium Tasks 
+--1. 
+
+SELECT 
+  EmployeeID,
+  FirstName,
+  LastName,
+  Salary,
+  AVG(Salary) OVER (ORDER BY Salary 
+  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS CumulativeAvgSalary
+FROM Employees1
+ORDER BY Salary
+
+--2. 
+SELECT 
+ ProductID,
+ SUM(SalesAmount) AS TotalSales,
+ RANK() OVER (ORDER BY SUM(SalesAmount) DESC) AS SalesRank
+FROM Sales1
+GROUP BY ProductID
+ORDER BY SalesRank
+
+--3. 
+
+Select * from orders 
+
+SELECT 
+ *,
+LAG(OrderDate) OVER (ORDER BY OrderDate) AS PreviousOrderDate
+FROM Orders
+ORDER BY OrderDate
+
+--4. 
+
+SELECT 
+    ProductID,
+    ProductName,
+    Price,
+    SUM(Price) OVER (
+        ORDER BY ProductID
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) AS MovingSum
+FROM Products
+
+--5. 
+
+SELECT 
+EmployeeID,
+FirstName,
+LastName,
+Salary,
+NTILE(4) OVER (ORDER BY Salary) AS SalaryRange
+FROM Employees1
+ORDER BY Salary
+
+--6. 
+
+SELECT 
+ SalesID,
+ ProductID,
+ SalesAmount,
+ SUM(SalesAmount) OVER (PARTITION BY ProductID) AS TotalSalesPerProduct
+FROM Sales1
+ORDER BY ProductID, SalesID
+
+--7.
+
+SELECT 
+ ProductID,
+ ProductName,
+ StockQuantity,
+ DENSE_RANK() OVER (ORDER BY StockQuantity DESC) AS StockRank
+FROM Products
+ORDER BY StockRank
+
+--8.
+WITH cte AS (
+    SELECT 
+        EmployeeID,
+        FirstName,
+        LastName,
+        DepartmentID,
+        Salary,
+        ROW_NUMBER() OVER (
+            PARTITION BY DepartmentID 
+            ORDER BY Salary DESC
+        ) AS rn
+    FROM Employees1
+)
+SELECT 
+    EmployeeID,
+    FirstName,
+    LastName,
+    DepartmentID,
+    Salary
+FROM cte
+WHERE rn = 2
+
+--9. 
+
+SELECT 
+    SalesID,
+    ProductID,
+    SalesDate,
+    SalesAmount,
+    SUM(SalesAmount) OVER (
+    PARTITION BY ProductID
+    ORDER BY SalesDate
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS RunningTotal
+FROM Sales1
+ORDER BY ProductID, SalesDate
+
+--10. 
+
+drop table sales 
+CREATE TABLE Sales (
+    SalesID INT PRIMARY KEY,
+    SalesAmount DECIMAL(10, 2),
+    ProductID INT,
+    SaleDate DATE
+);
+
+INSERT INTO Sales (SalesID, SalesAmount, ProductID, SaleDate) VALUES
+(1, 150.00, 1, '2025-01-01'),
+(2, 200.00, 2, '2025-01-02'),
+(3, 120.00, 3, '2025-01-03'),
+(4, 180.00, 4, '2025-01-04'),
+(5, 220.00, 5, '2025-01-05'),
+(6, 140.00, 6, '2025-01-06'),
+(7, 250.00, 1, '2025-01-07'),
+(8, 170.00, 2, '2025-01-08'),
+(9, 160.00, 3, '2025-01-09'),
+(10, 190.00, 4, '2025-01-10'),
+(11, 210.00, 5, '2025-01-11'),
+(12, 130.00, 6, '2025-01-12'),
+(13, 200.00, 1, '2025-01-13'),
+(14, 180.00, 2, '2025-01-14'),
+(15, 150.00, 3, '2025-01-15'),
+(16, 220.00, 4, '2025-01-16'),
+(17, 170.00, 5, '2025-01-17'),
+(18, 160.00, 6, '2025-01-18'),
+(19, 250.00, 1, '2025-01-19'),
+(20, 180.00, 2, '2025-01-20'),
+(21, 140.00, 3, '2025-01-21'),
+(22, 190.00, 4, '2025-01-22'),
+(23, 210.00, 5, '2025-01-23'),
+(24, 160.00, 6, '2025-01-24'),
+(25, 150.00, 1, '2025-01-25'),
+(26, 200.00, 2, '2025-01-26'),
+(27, 220.00, 3, '2025-01-27'),
+(28, 130.00, 4, '2025-01-28'),
+(29, 250.00, 5, '2025-01-29'),
+(30, 180.00, 6, '2025-01-30'),
+(31, 210.00, 1, '2025-02-01'),
+(32, 170.00, 2, '2025-02-02'),
+(33, 160.00, 3, '2025-02-03'),
+(34, 190.00, 4, '2025-02-04'),
+(35, 200.00, 5, '2025-02-05'),
+(36, 220.00, 6, '2025-02-06'),
+(37, 130.00, 1, '2025-02-07'),
+(38, 250.00, 2, '2025-02-08'),
+(39, 140.00, 3, '2025-02-09'),
+(40, 180.00, 4, '2025-02-10');
+
+
+SELECT 
+    SalesID,
+    ProductID,
+    SaleDate,
+    SalesAmount,
+    LEAD(SalesAmount) OVER (
+        PARTITION BY ProductID 
+        ORDER BY SaleDate
+    ) AS NextSalesAmount
+FROM Sales
+ORDER BY ProductID, SaleDate
+
+--11. 
+WITH cte AS (
+    SELECT 
+        EmployeeID,
+        FirstName,
+        LastName,
+        DepartmentID,
+        Salary,
+        RANK() OVER (
+            PARTITION BY DepartmentID 
+            ORDER BY Salary DESC
+        ) AS SalaryRank
+    FROM Employees1
+)
+SELECT 
+    EmployeeID,
+    FirstName,
+    LastName,
+    DepartmentID,
+    Salary
+FROM cte
+WHERE SalaryRank = 1
+
+--12. 
+SELECT 
+    EmployeeID,
+    FirstName,
+    LastName,
+    DepartmentID,
+    Salary,
+    RANK() OVER (
+        PARTITION BY DepartmentID 
+        ORDER BY Salary DESC
+    ) AS SalaryRank
+FROM Employees1
+ORDER BY DepartmentID, SalaryRank
+
+--13. 
+
+SELECT 
+    ProductID,
+    ProductName,
+    Price,
+    NTILE(5) OVER (ORDER BY Price) AS PriceGroup
+FROM Products
+ORDER BY PriceGroup, Price
+
+--14. 
+SELECT 
+ EmployeeID,
+ FirstName,
+ LastName,
+ DepartmentID,
+ Salary,
+ MAX(Salary) OVER (PARTITION BY DepartmentID) AS MaxDeptSalary,
+ MAX(Salary) OVER (PARTITION BY DepartmentID) - Salary AS SalaryDifference
+FROM Employees1
+ORDER BY DepartmentID, SalaryDifference
+
+--15. 
+
+SELECT 
+    SalesID,
+    ProductID,
+    SaleDate,
+    SalesAmount,
+    LAG(SalesAmount) OVER (
+        PARTITION BY ProductID 
+        ORDER BY SaleDate
+    ) AS PreviousSalesAmount
+FROM Sales
+ORDER BY ProductID, SaleDate
+
+--16. 
+
+SELECT 
+    OrderID,
+    CustomerID,
+    OrderDate,
+    OrderAmount,
+    SUM(OrderAmount) OVER (
+        PARTITION BY CustomerID 
+        ORDER BY OrderDate 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS CumulativeOrderAmount
+FROM Orders
+ORDER BY CustomerID, OrderDate
+
+--17. 
+drop table orders 
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    CustomerID INT,
+    OrderAmount DECIMAL(10, 2),
+    OrderDate DATE
+);
+
+INSERT INTO Orders (OrderID, CustomerID, OrderAmount, OrderDate) VALUES
+(1, 1, 550.00, '2025-01-01'),
+(2, 2, 700.00, '2025-01-02'),
+(3, 3, 450.00, '2025-01-03'),
+(4, 4, 800.00, '2025-01-04'),
+(5, 5, 1200.00, '2025-01-05'),
+(6, 6, 950.00, '2025-01-06'),
+(7, 7, 700.00, '2025-01-07'),
+(8, 8, 600.00, '2025-01-08'),
+(9, 9, 800.00, '2025-01-09'),
+(10, 10, 700.00, '2025-01-10'),
+(11, 11, 650.00, '2025-01-11'),
+(12, 12, 550.00, '2025-01-12'),
+(13, 13, 450.00, '2025-01-13'),
+(14, 14, 600.00, '2025-01-14'),
+(15, 15, 550.00, '2025-01-15'),
+(16, 16, 600.00, '2025-01-16'),
+(17, 17, 800.00, '2025-01-17'),
+(18, 18, 1000.00, '2025-01-18'),
+(19, 19, 700.00, '2025-01-19'),
+(20, 20, 600.00, '2025-01-20'),
+(21, 21, 500.00, '2025-01-21'),
+(22, 22, 450.00, '2025-01-22'),
+(23, 23, 700.00, '2025-01-23'),
+(24, 24, 650.00, '2025-01-24'),
+(25, 25, 600.00, '2025-01-25'),
+(26, 26, 700.00, '2025-01-26'),
+(27, 27, 800.00, '2025-01-27'),
+(28, 28, 950.00, '2025-01-28'),
+(29, 29, 1000.00, '2025-01-29'),
+(30, 30, 700.00, '2025-01-30'),
+(31, 31, 600.00, '2025-02-01'),
+(32, 32, 550.00, '2025-02-02'),
+(33, 33, 450.00, '2025-02-03'),
+(34, 34, 600.00, '2025-02-04'),
+(35, 35, 650.00, '2025-02-05'),
+(36, 36, 700.00, '2025-02-06'),
+(37, 37, 800.00, '2025-02-07'),
+(38, 38, 750.00, '2025-02-08'),
+(39, 39, 900.00, '2025-02-09'),
+(40, 40, 950.00, '2025-02-10');
+select * from orders 
+WITH cte AS (
+    SELECT 
+        OrderID,
+        CustomerID,
+        OrderDate,
+        OrderAmount,
+        ROW_NUMBER() OVER (
+            PARTITION BY CustomerID 
+            ORDER BY OrderDate DESC
+        ) AS rn
+    FROM Orders
+)
+SELECT *
+FROM cte
+WHERE rn = 3
+
+--18. 
+
+SELECT 
+    EmployeeID,
+    FirstName,
+    LastName,
+    DepartmentID,
+    HireDate,
+    RANK() OVER (
+        PARTITION BY DepartmentID 
+        ORDER BY HireDate
+    ) AS HireRank
+FROM Employees1
+ORDER BY DepartmentID, HireRank
+
+--19.
+
+WITH RankedSalaries AS (
+    SELECT 
+        EmployeeID,
+        FirstName,
+        LastName,
+        DepartmentID,
+        Salary,
+        DENSE_RANK() OVER (
+            PARTITION BY DepartmentID 
+            ORDER BY Salary DESC
+        ) AS SalaryRank
+    FROM Employees1
+)
+SELECT *
+FROM RankedSalaries
+WHERE SalaryRank = 3
+
+--20. 
+
+SELECT 
+    OrderID,
+    CustomerID,
+    OrderDate,
+    LEAD(OrderDate) OVER (
+        PARTITION BY CustomerID 
+        ORDER BY OrderDate
+    ) AS NextOrderDate,
+    DATEDIFF(DAY, OrderDate, LEAD(OrderDate) OVER (
+        PARTITION BY CustomerID 
+        ORDER BY OrderDate
+    )) AS DaysUntilNextOrder
+FROM Orders
+ORDER BY CustomerID, OrderDate
+ -- Difficult Tasks 
+ --1. 
+WITH ProductSales AS (
+    SELECT 
+        ProductID,
+        SUM(SalesAmount) AS TotalSales
+    FROM Sales
+    GROUP BY ProductID
+),
+RankedProducts AS (
+    SELECT 
+        ProductID,
+        TotalSales,
+        RANK() OVER (ORDER BY TotalSales DESC) AS SalesRank,
+        COUNT(*) OVER () AS TotalProducts
+    FROM ProductSales
+)
+SELECT 
+    ProductID,
+    TotalSales,
+    SalesRank
+FROM RankedProducts
+WHERE SalesRank > (TotalProducts * 0.10)
+ORDER BY SalesRank
+
+--2. 
+
+SELECT *
+FROM (
+    SELECT 
+        EmployeeID,
+        FirstName,
+        LastName,
+        DepartmentID,
+        HireDate,
+        ROW_NUMBER() OVER (ORDER BY HireDate) AS RowNum
+    FROM Employees1
+    WHERE DATEDIFF(YEAR, HireDate, GETDATE()) > 5
+) AS FilteredEmployees
+ORDER BY HireDate
+--3. 
+
+SELECT 
+    EmployeeID,
+    FirstName,
+    LastName,
+    Salary,
+    NTILE(10) OVER (ORDER BY Salary) AS SalaryGroup
+FROM Employees1
+ORDER BY SalaryGroup
+
+--4. 
+drop table sales 
+CREATE TABLE Sales (
+    SalesID INT PRIMARY KEY,
+    EmployeeID INT,
+    ProductID INT,
+    SalesAmount DECIMAL(10, 2),
+    SalesDate DATE
+);
+
+INSERT INTO Sales (SalesID, EmployeeID, ProductID, SalesAmount, SalesDate) VALUES
+(1, 1, 1, 500.00, '2025-01-01'),
+(2, 2, 2, 1200.00, '2025-01-02'),
+(3, 3, 3, 800.00, '2025-01-03'),
+(4, 4, 4, 1500.00, '2025-01-04'),
+(5, 5, 5, 300.00, '2025-01-05'),
+(6, 6, 6, 1000.00, '2025-01-06'),
+(7, 7, 7, 850.00, '2025-01-07'),
+(8, 8, 8, 500.00, '2025-01-08'),
+(9, 9, 9, 600.00, '2025-01-09'),
+(10, 10, 10, 450.00, '2025-01-10'),
+(11, 11, 11, 700.00, '2025-01-11'),
+(12, 12, 12, 800.00, '2025-01-12'),
+(13, 13, 13, 1200.00, '2025-01-13'),
+(14, 14, 14, 1500.00, '2025-01-14'),
+(15, 15, 15, 950.00, '2025-01-15'),
+(16, 16, 16, 600.00, '2025-01-16'),
+(17, 17, 17, 700.00, '2025-01-17'),
+(18, 18, 18, 1100.00, '2025-01-18'),
+(19, 19, 19, 500.00, '2025-01-19'),
+(20, 20, 20, 400.00, '2025-01-20'),
+(21, 21, 21, 800.00, '2025-01-21'),
+(22, 22, 22, 650.00, '2025-01-22'),
+(23, 23, 23, 700.00, '2025-01-23'),
+(24, 24, 24, 1200.00, '2025-01-24'),
+(25, 25, 25, 500.00, '2025-01-25'),
+(26, 26, 26, 850.00, '2025-01-26'),
+(27, 27, 27, 600.00, '2025-01-27'),
+(28, 28, 28, 1200.00, '2025-01-28'),
+(29, 29, 29, 700.00, '2025-01-29'),
+(30, 30, 30, 450.00, '2025-01-30'),
+(31, 31, 31, 800.00, '2025-02-01'),
+(32, 32, 32, 1200.00, '2025-02-02'),
+(33, 33, 33, 900.00, '2025-02-03'),
+(34, 34, 34, 600.00, '2025-02-04'),
+(35, 35, 35, 950.00, '2025-02-05'),
+(36, 36, 36, 1000.00, '2025-02-06'),
+(37, 37, 37, 700.00, '2025-02-07'),
+(38, 38, 38, 850.00, '2025-02-08'),
+(39, 39, 39, 600.00, '2025-02-09'),
+(40, 40, 40, 500.00, '2025-02-10');
+
+SELECT 
+    SalesID,
+    EmployeeID,
+    SalesDate,
+    SalesAmount,
+    LEAD(SalesAmount) OVER (
+        PARTITION BY EmployeeID 
+        ORDER BY SalesDate
+    ) AS NextSalesAmount,
+    LEAD(SalesAmount) OVER (
+        PARTITION BY EmployeeID 
+        ORDER BY SalesDate
+    ) - SalesAmount AS SalesDifference
+FROM Sales
+ORDER BY EmployeeID, SalesDate
+
+--5. 
+SELECT 
+    ProductID,
+    ProductName,
+    CategoryID,
+    Price,
+    AVG(Price) OVER (PARTITION BY CategoryID) AS AvgPricePerCategory
+FROM Products
+ORDER BY CategoryID
